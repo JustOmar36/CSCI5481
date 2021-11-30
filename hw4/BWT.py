@@ -1,4 +1,7 @@
-from collections import deque
+import sys
+sampleFile = 'sample1.fa'
+sapiensFile = 'bwtHomoSapiens.fa'
+
 def read_file(filename):
     sequence = ''
     f = open(filename, 'r')
@@ -32,10 +35,14 @@ def bwt(sequence):
         bwt_arr.append(i[len(i) -1])
     new_seq = new_seq.join(bwt_arr)
 
-    print(new_seq)
+    #print(new_seq)
+    f= open('bwtSample1.fa', 'w')
+    f.write(str(new_seq))
+    f.close()
     return new_seq
 
 def inverse_bwt(encoded_seq):
+    # print(encoded_seq)
     encode_str = ''
     encode = list(encoded_seq)
     org_str = encoded_seq
@@ -57,8 +64,18 @@ def inverse_bwt(encoded_seq):
         if i[len(i) - 1] == '$':
             encode_str = i
     print(encode_str)
+    # f = open('rBwtSample2.fa', 'w')
+    # f.write(str(encode_str))
+    # f.close()
     return encode_str
 
-seq = read_file('sample1.fa')
-encoded_seq = bwt(seq)
-inverse_bwt(encoded_seq)
+if __name__ == "__main__":
+    args = sys.argv
+    if len(args) == 2:
+        if (args[1].isnumeric()):
+            if (int(args[1])) == 1:
+                print("Running BWT on Sample1")
+                bwt(read_file(sampleFile))
+            if(int(args[1])) == 2:
+                print("Running reverseBWT on bwtHomoSapiens.fa")
+                inverse_bwt(read_file(sapiensFile))
