@@ -66,41 +66,39 @@ def bwt(sequence):
 #     print(encode_str)
 #     return encode_str
 
-def inverse_bwt(encoded_seq):
-    final = []
-    forward = sorted(encoded_seq)
-    tracker=[]
-    counts = {"A":0,"G":0,"C":0,"T":0,"$":0}
+def give_rank(bw):
+    dict_of_things = dict()
+    ranks = []
+    for i in bw:
+        if i not in dict_of_things:
+            dict_of_things[i] = 0
+        ranks.append(dict_of_things[i])
+        dict_of_things[i] += 1
+    return ranks, dict_of_things
 
-    for i in encoded_seq:
-        counts[i]+=1
-        tracker.append((i, counts[i]))
+def mapping(dict_of_things):
+    first = {}
+    items_counts = 0
+    for i, count in sorted(dict_of_things.items()):
+        first[i] = (items_counts, items_counts + count)
+        items_counts += count
+    return first
+
+def inverse_bwt(sequence):
+    ranks, dict_of_things = give_rank(sequence)
+    first = mapping(dict_of_things)
+    i = 0
+    symbol = "$"
+    while sequence[i] != '$':
+        letter = sequence[i]
+        symbol = letter + symbol
+        i = first[letter][0] + ranks[i]
     
-    tracking_dict={"A":1,"G":0,"C":0,"T":0,"$":0}
-    tracking_dict["c"] = counts["A"]+1
-    tracking_dict["G"] = tracking_dict["C"]+counts["C"]
-    tracking_dict["T"] = tracking_dict["G"]+counts["G"]
-
-    unorder = tracker.copy()
-    tracker.sort(key=operator.itemgetter(0))
-    final.append(unorder[0])
-    letter=unorder[0]
-
-    for i in range(len(unorder)-1):
-        index = tracking_dict[letter[0]]+ letter[1]-1
-        final.append(unorder[index])
-        letter=unorder[index]
-    
-    sequence = ""
-    for i in final[:-1]:
-        sequence = sequence + i[0]
-    sequence = sequence[::-1]
     f = open('rBwtSample2.fa', 'w')
-    f.write(sequence)
+    f.write(symbol)
     f.close()
+    return symbol
 
-    return sequence
-    
 # if __name__ == "__main__":
 #     args = sys.argv
 #     if len(args) == 2:
