@@ -2,8 +2,12 @@
 The SankOff algorithm 
 '''
 from math import inf
-from phylogeny import run_phy_file
+import phylogeny
+import sys
+from os import listdir
+from os.path import isfile, join
 userinput3 = ''
+userinput4 = ''
 p_inf = inf
 score = 0
 
@@ -198,46 +202,20 @@ def sankoff(sequences):
     
     return all_sequences
 
-
-"""
-This function will run only if we are running the toy sequences, but it will sort of print the sequences in tree structure
-"""
-def print_tree(list_of_sequences):
-    array_degrees = []
-    temp_array = list_of_sequences
-    for i in range(int((len(list_of_sequences)/2))):
-        array_degrees.append(i)
-    
-    for i in range(len(array_degrees)):
-        array_degrees[i] = array_degrees[i]*2
-
-    f = open("toy_result.txt", "w")
-    f.write(str(list_of_sequences))
-    f.write("\n")
-    for i in array_degrees:
-        if i == 0:
-            f.write(str(temp_array[0:1]))
-            f.write("\n")
-            temp_array.pop(0)
-        else:
-            f.write(str(temp_array[:i]))
-            f.write("\n")
-            for j in range(i -1):
-                temp_array.pop(0)
-
 """
 This is the function that is called in phySankOff
 
 If the arg is 2 then it will run the toy sequence problem,
 otherwise it will run on the 38 sequences
 """
-def run_sankoff(filename):
+def run_sankoff(args):
+    _, filename = args
     global score
-    tree = run_phy_file(filename)
+    tree = phylogeny.run_phy_file(filename)
     sequences = []
     sequence = ""
 
-    f = open('phy_align.fasta', 'r')
+    f = open('output/' + phylogeny.userinput1, 'r')
     for line, i in enumerate(f):
         if line == 0:
             continue
@@ -253,11 +231,52 @@ def run_sankoff(filename):
     array = sankoff(sequences)
     
     global userinput3
-    userinput3 = input("Enter a file name to print out the results from SankOff: ")
-    f = open(userinput3, 'w')
+    userinput3 = input("Enter a file name to print out the results from SankOff on NNJ (Please ensure it is of type Fasta): ")
+    f = open("output/" + userinput3, 'w')
     f.write("parsimony result = " + str(score) + "\n")
     for i in array:
         f.write(i)
         f.write("\n")
     f.close()
 
+    sequences = []
+    sequence = ""
+
+    f = open('output/' + phylogeny.userinput2, 'r')
+    for line, i in enumerate(f):
+        if line == 0:
+            continue
+
+        if i.startswith('>'):
+            sequence = sequence.replace('\n', '')
+            sequences.append(sequence)
+            sequence = ""
+        else:
+            sequence += i
+    f.close()
+    
+    array = sankoff(sequences)
+    
+    global userinput4
+    userinput4 = input("Enter a file name to print out the results from SankOff for alternative nearest neighbor search method (Please ensure it is of type Fasta): ")
+    f = open("output/" + userinput4, 'w')
+    f.write("parsimony result = " + str(score) + "\n")
+    for i in array:
+        f.write(i)
+        f.write("\n")
+    f.close()
+
+    
+if __name__ == "__main__":
+    args = sys.argv
+    if len(args) == 2:
+        if(args[1][-6:] == '.fasta'):
+            print('Running Sank-Off...')
+            run_sankoff(args)
+        else:
+            print('First arugment is expected to be of type FASTA')
+    else:
+        onlyfiles = [f for f in listdir('input/') if isfile(join('input/', f))]
+        print('expected one argument: name of desired file.')
+        print('Available files:')
+        print(onlyfiles)
