@@ -3,6 +3,7 @@ The SankOff algorithm
 '''
 from math import inf
 from phylogeny import run_phy_file
+userinput3 = ''
 p_inf = inf
 score = 0
 
@@ -232,47 +233,31 @@ otherwise it will run on the 38 sequences
 """
 def run_sankoff(filename):
     global score
+    tree = run_phy_file(filename)
+    sequences = []
+    sequence = ""
 
-    if problem == str(2):
-        sequence = ""
-        print("For part 2 the only file avaliable is: toy_alignments.txt (no quotation marks needed)")
-        filename = input("Enter toy sequence filename: ")
-        f = open(filename, "r")
-        for i in f:
-            print(i)
+    f = open('phy_align.fasta', 'r')
+    for line, i in enumerate(f):
+        if line == 0:
+            continue
+
+        if i.startswith('>'):
+            sequence = sequence.replace('\n', '')
+            sequences.append(sequence)
+            sequence = ""
+        else:
             sequence += i
-        sequence = sequence.replace(" ", '')
-        seq_list = sequence.split(',')
-        print(seq_list)
-        array = sankoff(seq_list)
-        print_tree(array)
-        print(score)
+    f.close()
     
-    else:
-        tree = run_phy_file(args)
-        print(score)
-        sequences = []
-        sequence = ""
-
-        f = open('phy_align.fasta', 'r')
-        for line, i in enumerate(f):
-            if line == 0:
-                continue
-
-            if i.startswith('>'):
-                sequence = sequence.replace('\n', '')
-                sequences.append(sequence)
-                sequence = ""
-            else:
-                sequence += i
-        f.close()
-        
-        array = sankoff(sequences)
-        
-        f = open('sankoff_result.txt', 'w')
-        f.write("parsimony result = " + str(score) + "\n")
-        for i in array:
-            f.write(i)
-            f.write("\n")
-        f.close()
+    array = sankoff(sequences)
+    
+    global userinput3
+    userinput3 = input("Enter a file name to print out the results from SankOff: ")
+    f = open(userinput3, 'w')
+    f.write("parsimony result = " + str(score) + "\n")
+    for i in array:
+        f.write(i)
+        f.write("\n")
+    f.close()
 
