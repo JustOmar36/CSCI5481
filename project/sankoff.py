@@ -4,6 +4,7 @@ The SankOff algorithm
 from math import inf
 from phylogeny import run_phy_file
 p_inf = inf
+score = 0
 
 scoring_matrix = [
    [0, 3, 4, 9, 8],
@@ -142,8 +143,10 @@ def run_sankof_on_index(sequences_list):
             going_up.append(final_result)
         else:
             final.append(going_up[i-1])
+            
     final = final[::-1]
-
+    global score
+    score += min(final[0])
     return go_down_tree(final)
 
 """
@@ -159,7 +162,6 @@ def get_sequences_back(seq1, seq2):
 
         for i in range(0, len(nuc_list), 2):
             new_seq += run_sankof_on_index(nuc_list)
-    
     
     return new_seq
 
@@ -228,8 +230,8 @@ This is the function that is called in phySankOff
 If the arg is 2 then it will run the toy sequence problem,
 otherwise it will run on the 38 sequences
 """
-def run_sankoff(args):
-    _, problem = args
+def run_sankoff(filename):
+    global score
 
     if problem == str(2):
         sequence = ""
@@ -244,9 +246,10 @@ def run_sankoff(args):
         print(seq_list)
         array = sankoff(seq_list)
         print_tree(array)
+        print(score)
     
     else:
-        score = run_phy_file(args)
+        tree = run_phy_file(args)
         print(score)
         sequences = []
         sequence = ""

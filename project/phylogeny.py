@@ -1,8 +1,31 @@
 from Bio import Phylo, AlignIO
 from Bio.Phylo.TreeConstruction import *
-import sys
+from sankoff import run_sankoff
+import random
 
 filename = "alignments.fasta"
+userinput1 = ''
+userinput2 = ''
+
+def create_sankoff_files(njTree, align_dict, name_of_file):
+  name_of_file = str(name_of_file)
+  tree_nodes = njTree.get_terminals()
+
+  f = open(name_of_file, "w")
+
+  for i in tree_nodes:
+      for k,v in align_dict.items():
+          temp = k.split(" ")
+          if temp[0] == str(i):
+              f.write(">" + str(k) + "\n")
+              f.write(str(v) + "\n")
+  f.close()            
+
+  align = AlignIO.read(name_of_file, "fasta")
+  f = open(name_of_file, "w")
+  f.write(format(align, "fasta"))
+  f.close()
+  
 
 """
 This function will read in the alignment file and then make a dictionary out of the names and the sequences
@@ -53,7 +76,6 @@ a new file and then the format function will format it into a new fasta file cal
 This takes about a minute or two to run
 """
 def build_phy_tree(distMatrix, alignment, filename, problem):
-  score = 0
   constructor = DistanceTreeConstructor()
   neighbor_Tree = constructor.nj(distMatrix)
   align_dict = ReadFastaFile(filename)
@@ -61,40 +83,35 @@ def build_phy_tree(distMatrix, alignment, filename, problem):
   constructor = ParsimonyTreeConstructor(NNITreeSearcher(ParsimonyScorer()), neighbor_Tree)
   tree = constructor.build_tree(alignment)
 
+  f = open("tree_structure.txt", "w")
+  f.write(str(tree))
+  f.close()
+  Phylo.draw(neighbor_Tree)
+  global userinput1
+  userinput1 = input("Enter an output file name for a reconstructed Fasta file using this tree's information: ")
+  create_sankoff_files(tree, align_dict, userinput1)
 
-  if problem == str(1):
-      f = open("tree_structure.txt", "w")
-      f.write(str(tree))
-      f.close()
-      Phylo.draw(neighbor_Tree)
+  return neighbor_Tree
 
-  else:
-      tree_nodes = tree.get_terminals()
+def prunning(njTree, alignment):
+  align_dict = ReadFastaFile(filename)
+  clade = random.choice(njTree.get_nonterminals())
+  prunned_tree = njTree.from_clade(clade)
+  Phylo.draw(prunned_tree)
+  njTree.root_with_outgroup(clade)
+  #delete_subtree(njTree, prunned_tree)
+  constructor = ParsimonyTreeConstructor(NNITreeSearcher(ParsimonyScorer()), njTree)
+  tree = constructor.build_tree(alignment)
 
-      f = open("phy_align.fasta", "w")
+  global userinput2
+  userinput2 = input("Enter an output file name for a reconstructed Fasta file using this tree's information: ")
 
-      for i in tree_nodes:
-          for k,v in align_dict.items():
-              temp = k.split(" ")
-              if temp[0] == str(i):
-                  f.write(">" + str(k) + "\n")
-                  f.write(str(v) + "\n")
-      f.close()            
-
-      align = AlignIO.read("phy_align.fasta", "fasta")
-      f = open("phy_align.fasta", "w")
-      f.write(format(align, "fasta"))
-      f.close()
-
-      score = ParsimonyScorer().get_score(tree, alignment)
-      print(score)
-  return score
-
-"""
-This is the function I call onto in phySankoff.py
-"""
-def run_phy_file(args):
-    _, problem = args
-    dist_matrix, alignment, filename = get_dist_matrix('alignments.fasta')
-    score = build_phy_tree(dist_matrix, alignment, filename, problem)
-    return score
+  create_sankoff_files(tree, align_dict, userinput2)
+  Phylo.draw(njTree)
+     
+def run_phy_file(filename):
+  dist_matrix, alignment, filename = get_dist_matrix(filename)
+  tree = build_phy_tree(dist_matrix, alignment, filename)
+  prunned_tree = prunning(tree, alignment)
+  run_sankoff(userinput1)
+  run_sankoff(userinput2)
